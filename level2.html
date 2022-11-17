@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+*{
+    text-align: center;
+}
+/*untuk bagian awal mulai*/
+.border{
+    border: solid #ffffff;
+    width: 1000px;
+    height: 600px;
+    margin-top: 8px;
+    background: url("BGDEPANSORE.png");
+    background-size: cover;
+}
+p {
+    font-size: larger;
+    font-family: Verdana;
+}
+div{
+    text-align: center;
+    margin: 3% auto;
+}
+button{
+    width: 282px;
+    height: 43px;
+   
+    
+    
+    font-family: 'Inter'; 
+    font-style: normal;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 24px;
+}
+button:active{
+    background-color: #59d396;
+}
+canvas {
+    border:1px solid rgb(255, 255, 255); 
+}
+/* #Tom{
+    position: absolute;
+    width: 70;
+    height: 10;
+    top: 35%;
+    left: 40%; untuk mengatur tombol mulai ulang
+} */
+#Tom{
+    position:fixed;
+    top: 25%;
+    left:37%;
+    border-radius: 20%;
+    width: 350px;
+    height: 250px;
+    background:#bb8013 ;
+}
+
+img{/*mengatur ukuran gambar karakter*/
+    width: 250px;
+    height: 250px;
+}
+</style>
+</head>
+<body>
+    <!--untuk tombol memulai ulang game-->
+    <div id="Tom" style="display: none;">
+        <h1>GAME OVER</h1>
+        <h1 id="score">SCORE:<span id="skor">0</span></h1>
+        <button style="background-color: #a5ca1d;" onclick="startGame()">MULAI ULANG</button>
+        <a href="level3.html">
+        <button style="background-color: #a5ca1d;" onclick="startGame()">LEVEL SELANJUTNYA</button>   
+        </a>
+    </div>
+    <div class="border"> <!--untuk memulai ulang game-->
+        <div>
+            <!--Untuk menambahkan karakter-->
+            <div id="player" style="display: none; color:#000000">
+                <h2>PILIH KARAKTER</h2>
+                <img src="OCY0.png">
+                <img src="OCY1.png">
+                <img src="OCY2.png"> 
+        </div>
+        <div>
+            <!--untuk memulai game-->
+            <button onclick="choose()" style="background-color:#e06d0e; border-radius: 50px;">MULAI</button>
+        </div>
+        <div>
+            <!--<button>SETTING</button>-->
+            <button  id="tentangB" onclick="TENTANG()" style="background-color:#afbb6b; border-radius: 50px;">TENTANG</button>
+        </div>
+        <div id="TENTANG" style="display: none;">
+            <h1>TENTANG</h1> 
+            <p>Ocy adalah koala yang lucu didalam hutan hujan tropis Ocy si koala <br>
+                sedang berjalan-jalan untuk memetik buah-buahan, sudah sekitar 30 menit Ocy mencari <br>
+                buah-buahan disini tapi yang dia dapat sangat sedikit. Ocy mendengar dari teman-temannya <br>
+                bahwa ada tempat yang memiliki sangat banyak buah-buahan tempat itu bernama "Paradise Forest" <br>
+                dan Ocy tertarik untuk pergi, tapi untuk pergi ke tempat itu Ocy harus melewati rintangan <br>
+                terlebih dahulu, ayo bantu Ocy untuk bisa sampai ke tempat tersebut... <br>
+            </p></div>
+<script>
+//variable
+var myGamePiece;
+var myBackground;
+var myObstacles = [];
+var myScore;
+var mySound;
+var myMusic;
+var player=document.querySelectorAll('div#player img');
+
+//memilih palyer`]]
+function choose(){
+    document.getElementById('player').style.display ="";
+    document.querySelector('div.border div button').style.display = "none";
+    document.getElementById("TENTANG").style.display= "none"; //untuk menghilangkan tentang
+    document.getElementById('tentangB').style.display='none';
+}
+//memilih player dengan di klik
+for(let i=0; i<player.length; i++){
+    player[i].addEventListener('click', function(){
+        iplayer = i;
+        startGame();
+    })
+}
+//untuk halaman tentang
+function TENTANG(){
+    document.getElementById("TENTANG").style.display="";
+    document.getElementById('tentangB').style.display='none'; //menghilangkan tombol tentang
+}
+function startGame() {
+    myGamePiece = new component(70, 70, "OCY"+iplayer+".png", 30, 100,"image"); //untuk mengatur playaer
+    myBackground = new component(1000, 600, "BGSORE.png", 0, 0, "image"); // canvas untuk game
+    myGamePiece.gravity = 0.05;
+    myScore = new component("20px", "Monotype", "BLACK", 20, 40, "text");
+    myGameArea.start();
+    mySound = new sound("sound.mp3"); // jika player menabrak obstacle
+    myMusic = new sound("musicgame.mp3"); // musik saat game berjalan
+
+    document.querySelector(".border").style.display = "none";
+    document.getElementById('Tom').style.display ="none"; //untuk mulai ulang
+    myObstacles.splice(0,myObstacles.length)
+}
+//untuk mengatur canvas pada saat game berjalan
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 1000;
+        this.canvas.height = 600;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateGameArea, 20);
+        window.addEventListener('keydown', function (e) {
+      myGameArea.key = e.keyCode;
+    })
+    window.addEventListener('keyup', function (e) {
+      myGameArea.key = false;
+    })
+          },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+        document.getElementById('skor').innerHTML = this.frameNo;
+    }
+}
+
+function component(width, height, color, x, y, type) {
+    this.type=type;
+    if(type=="image"){
+        this.image = new Image();
+        this.image.src = color;
+    }
+    this.type = type;
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;    
+    this.x = x;
+    this.y = y;
+
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (this.type == "text") {
+            ctx.font = this.width + " " + this.height;
+            ctx.fillStyle = color;
+            ctx.fillText(this.text, this.x, this.y);
+    }
+    if (type == "image") {
+      ctx.drawImage(this.image,
+        this.x,
+        this.y,
+        this.width, this.height);
+    }  else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.newPos = function() {
+        this.x += this.speedX;
+        this.y += this.speedY 
+        this.hitBottom();
+        this.hitTop();
+    }
+    this.hitBottom = function() {
+    var rockbottom = myGameArea.canvas.height - this.height;
+    if (this.y > rockbottom) {
+      this.y = rockbottom;
+    }
+  }
+    this.hitTop = function() {
+    var rocktop = 0;
+    if (this.y < rocktop) {
+      this.y = rocktop;
+    }
+  }
+    
+    this.crashWith = function(otherobj) {
+        var myleft = this.x;
+        var myright = this.x + (this.width);
+        var mytop = this.y;
+        var mybottom = this.y + (this.height);
+        var otherleft = otherobj.x;
+        var otherright = otherobj.x + (otherobj.width);
+        var othertop = otherobj.y;
+        var otherbottom = otherobj.y + (otherobj.height);
+        var crash = true;
+        if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+            crash = false;
+        }
+        return crash;
+    }
+}
+
+function updateGameArea() {
+    var x, size, i, random, random1;
+    for (i = 0; i < myObstacles.length; i += 1) {
+        if (myGamePiece.crashWith(myObstacles[i])) {
+            mySound.play();
+            myMusic.stop();
+            myGameArea.stop();
+            document.getElementById('Tom').style.display=""; //untuk tombol mulai ulang
+            return;
+        } 
+    }
+    if(myGameArea.frameNo==3000){ //menghentikan game ketiika mencapai 000
+        myGameArea.stop();
+        document.getElementById('Tom').style.display="";
+        document.querySelector('#Tom h1').innerHTML = 'KAMU MENANG';
+        
+
+    }
+    myGameArea.clear();
+    myBackground.newPos();
+    myBackground.update();
+    
+myGamePiece.speedX = 0;
+myGamePiece.speedY = 0;
+            if (myGameArea.key && myGameArea.key == 37) {myGamePiece.speedX = -1; } //mengatur kecepatan kekiri
+            if (myGameArea.key && myGameArea.key == 39) {myGamePiece.speedX = 1; } //mengatur kecepaatan kekanan
+            if (myGameArea.key && myGameArea.key == 38) {myGamePiece.speedY = -1; } //mengatur kecepatan keatas
+            if (myGameArea.key && myGameArea.key == 40) {myGamePiece.speedY = 1; } //mengaatur kecepatan kebawah
+    myGameArea.frameNo += 1;
+    if (myGameArea.frameNo == 1 || everyinterval(180)) {
+        x = myGameArea.canvas.width;
+        size = Math.random()*(80-40)+40;
+
+        i = Math.round(Math.random()*2+1); //index obs
+        random = Math.floor(Math.random()*250); //
+        random1 = Math.floor(Math.random()*250+250);
+        myObstacles.push(new component(90, 50, "BURUNGOBS.png", x, random, "image")); // obstacle untuk game
+        myObstacles.push(new component(90, 50, "BURUNGOBS.png", x, random1, "image")); // obstacle unruk game
+    }
+    for (i = 0; i < myObstacles.length; i += 1) {
+        myObstacles[i].x += -1; //mengatur kecepatan obstacle
+        myObstacles[i].update();
+    }
+    //untuk menambahkan score
+    myScore.text="SCORE: " + myGameArea.frameNo;
+    myScore.update();
+    myGamePiece.newPos();    
+    myGamePiece.update();
+    myMusic.play();
+}
+function sound(src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+
+    this.play = function(){
+        this.sound.play();
+    }
+    this.stop = function(){
+        this.sound.pause();
+    } 
+       
+}
+
+function everyinterval(n) {//untuk naik turun karakter 
+    if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+    return false;
+}
+
+function accelerate(n) {//unutk naik turun tetapi makin lama ditekan tombolnya makin tinggi
+    if (!myGameArea.interval) {myGameArea.interval = setInterval(updateGameArea, 20);}
+    
+    myGamePiece.gravity = n;
+}
+//controler 
+document.addEventListener('keydown', function(e) {
+    if(e.which===32){
+        accelerate(-0.2);
+    }
+});
+document.addEventListener('keyup', function(e) {
+    if(e.which===32){
+        accelerate(0.5);
+    }
+})
+
+</script>
+</body>
+</html>
